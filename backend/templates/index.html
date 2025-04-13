@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ödev Benzerlik Kontrolü</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-blue-600">Ödev Benzerlik Kontrolü</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4">Birinci Metin</h2>
+                <textarea id="text1" class="w-full h-64 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="İlk metni buraya yapıştırın..."></textarea>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4">İkinci Metin</h2>
+                <textarea id="text2" class="w-full h-64 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="İkinci metni buraya yapıştırın..."></textarea>
+            </div>
+        </div>
+
+        <div class="text-center mt-8">
+            <button onclick="checkPlagiarism()" class="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                Benzerlik Kontrolü Yap
+            </button>
+        </div>
+
+        <div id="result" class="mt-8 p-6 bg-white rounded-lg shadow-lg hidden">
+            <h2 class="text-xl font-semibold mb-4">Sonuç</h2>
+            <div id="similarity-result" class="text-lg"></div>
+            <div class="mt-4 bg-gray-100 p-4 rounded">
+                <p class="text-sm text-gray-600">Not: Bu sonuç, metinler arasındaki kelime benzerliğine dayalıdır. Sonuçları dikkatli değerlendirin.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkPlagiarism() {
+            const text1 = document.getElementById('text1').value;
+            const text2 = document.getElementById('text2').value;
+
+            if (!text1 || !text2) {
+                alert('Lütfen her iki metin alanını da doldurun.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/check_plagiarism', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text1, text2 })
+                });
+
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('result');
+                const similarityResult = document.getElementById('similarity-result');
+                
+                resultDiv.classList.remove('hidden');
+                similarityResult.textContent = data.message;
+
+                // Renklendirme
+                if (data.similarity > 70) {
+                    similarityResult.className = 'text-red-600 font-bold';
+                } else if (data.similarity > 40) {
+                    similarityResult.className = 'text-yellow-600 font-bold';
+                } else {
+                    similarityResult.className = 'text-green-600 font-bold';
+                }
+            } catch (error) {
+                console.error('Hata:', error);
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            }
+        }
+    </script>
+</body>
+</html>
